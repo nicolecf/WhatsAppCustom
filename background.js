@@ -1,29 +1,26 @@
-// background.js
+async function getCurrentTab() {
+    let queryOptions = { active: true, lastFocusedWindow: true };
+    // `tab` will either be a `tabs.Tab` instance or `undefined`.
+    let [tab] = await chrome.tabs.query(queryOptions);
+    
+    return tab;
+};
 
-function changeBackground() {
-    let mainPage = document.getElementById('main');
-    if (mainPage) {
-        chrome.storage.sync.get({
-            urlImage: '',
-            imagePosition: 'center',
-          }, function(items) {
-            console.log(items);
-            mainPage.style.backgroundImage = `url("${items.urlImage}")`;
-            mainPage.style.backgroundPosition = items.imagePosition;
-            mainPage.style.backgroundSize = 'cover';
-          });
-    }
+function getTitle() {
+    return document.title;
 }
 
-let tryingGet = setInterval(() => {
+let tabId = await getCurrentTab();
+tabId.then((res) => {
     
-    let chatTabs = document.querySelectorAll('div[data-testid="chat-list"] > div > div');
-    if (chatTabs) {
-            
-        for (const tab of chatTabs) {
-            tab.addEventListener('click', changeBackground);
-        }
-        clearTimeout(tryingGet);
+})
+chrome.scripting.executeScript(
+    {
+    target: {tabId: tabId, allFrames: true},
+    func: getTitle,
+    },
+    (injectionResults) => {
+    for (const frameResult of injectionResults)
+        console.log('Frame Title: ' + frameResult.result);
     }
-
-}, 3000);
+);
